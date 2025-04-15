@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Crie mensagens especiais personalizadas para presentear quem você ama">
+  <title>Criar Mensagem | AgradeceAí</title>
+
+  <!-- Pré-carregar recursos -->
+  <link rel="preload" href="../style.css" as="style">
+  <link rel="preload" href="create.css" as="style">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="create.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="create-page">
+  <!-- Barra de Progresso -->
+  <div class="progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="8">
+    <div class="progress-step active" data-step="1"></div>
+    <div class="progress-step" data-step="2"></div>
+    <div class="progress-step" data-step="3"></div>
+    <div class="progress-step" data-step="4"></div>
+    <div class="progress-step" data-step="5"></div>
+    <div class="progress-step" data-step="6"></div>
+    <div class="progress-step" data-step="7"></div>
+    <div class="progress-step" data-step="8"></div>
+  </div>
+
+  <!-- Container Principal -->
+  <div class="create-container">
+    <!-- Formulário Principal -->
+    <form id="creation-form" class="form-pane" novalidate>
+      <!-- Etapa 1: Nome da Página -->
+      <div class="form-step active" data-step="1">
+        <h2><i class="fas fa-tag" aria-hidden="true"></i> <label for="page-name">Nome da Página</label></h2>
+        <p id="page-name-help">Usado no link para acessar. Ex: Gabriel & Clara ou Feliz Aniversário</p>
+        <input type="text" id="page-name" aria-describedby="page-name-help" placeholder="Digite o nome da página"
+          maxlength="30" required>
+        <div class="form-actions">
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 2: Título da Página -->
+      <div class="form-step" data-step="2">
+        <h2><i class="fas fa-heading" aria-hidden="true"></i> <label for="page-title">Título da Página</label></h2>
+        <p id="page-title-help">Ex: Te amo há... ou Nossas memórias</p>
+        <input type="text" id="page-title" aria-describedby="page-title-help" placeholder="Digite o título da página"
+          maxlength="50" required pattern=".{3,}" title="Mínimo 3 caracteres">
+        <div class="error-message" id="page-title-error"></div>
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 3: Mensagem -->
+      <div class="form-step" data-step="3">
+        <h2><i class="fas fa-comment-alt" aria-hidden="true"></i> <label for="page-message">Mensagem</label></h2>
+        <p id="message-help">Escreva uma mensagem especial</p>
+        <textarea id="page-message" aria-describedby="message-help char-counter" rows="5"
+          placeholder="Conte sua história..." maxlength="5000" required minlength="10"
+          title="Mínimo 10 caracteres"></textarea>
+        <div class="error-message" id="message-error"></div>
+        <div id="char-counter" class="char-counter" aria-live="polite">5000 caracteres restantes</div>
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 4: Fundo Animado -->
+      <div class="form-step" data-step="4">
+        <h2><i class="fas fa-paint-brush" aria-hidden="true"></i> <span id="background-label">Fundo Animado</span></h2>
+        <p id="background-help">Escolha um efeito especial para o fundo do seu cartão</p>
+        <div class="background-grid" aria-labelledby="background-label background-help">
+          <!-- Nenhum -->
+          <div class="background-option selected" data-bg="none" tabindex="0" role="button"
+            aria-label="Sem efeitos de fundo">
+            <div class="bg-preview default-bg">
+              <div class="no-effect-content">
+                <i class="fas fa-ban" aria-hidden="true"></i>
+                <span>Sem efeitos</span>
+              </div>
+            </div>
+            <span>Nenhum</span>
+          </div>
+
+          <!-- Efeito: Céu Estrelado -->
+          <div class="background-option" data-bg="starry-sky" tabindex="0" role="button"
+            aria-label="Efeito céu estrelado">
+            <div class="bg-preview starry-sky"></div>
+            <span>Céu Estrelado</span>
+          </div>
+
+          <!-- Efeito: Chuva de Corações -->
+          <div class="background-option" data-bg="emoji-rain" tabindex="0" role="button" aria-label="Chuva de corações">
+            <div class="bg-preview emoji-rain">
+              <div class="emoji-preview">❤️</div>
+              <div class="emoji-preview">💖</div>
+              <div class="emoji-preview">💘</div>
+            </div>
+            <span>Chuva de Corações</span>
+          </div>
+
+          <!-- Efeito: Chuva -->
+          <div class="background-option" data-bg="rain" tabindex="0" role="button" aria-label="Efeito chuva">
+            <div class="bg-preview rain">
+              <div class="drop" style="left: 10%; animation-delay: 0s"></div>
+              <div class="drop" style="left: 30%; animation-delay: 0.2s"></div>
+              <div class="drop" style="left: 50%; animation-delay: 0.4s"></div>
+              <div class="drop" style="left: 70%; animation-delay: 0.6s"></div>
+              <div class="drop" style="left: 90%; animation-delay: 0.8s"></div>
+            </div>
+            <span>Chuva</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 5: Fotos -->
+      <div class="form-step" data-step="5">
+        <h2><i class="fas fa-images" aria-hidden="true"></i> <label id="images-label">Fotos</label></h2>
+        <p id="images-help">Adicione até 7 fotos (PNG, JPG, JPEG, GIF)</p>
+        <div class="upload-area" id="upload-area" role="button" tabindex="0" aria-labelledby="images-label images-help"
+          aria-live="polite">
+          <i class="fas fa-cloud-upload-alt" aria-hidden="true"></i>
+          <p>Clique para adicionar fotos</p>
+          <input type="file" id="image-upload" aria-labelledby="images-label" accept="image/*" multiple
+            style="display: none;">
+        </div>
+        <div class="thumbnails" id="thumbnails"></div>
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 6: Música -->
+      <div class="form-step" data-step="6">
+        <h2><i class="fas fa-music" aria-hidden="true"></i> <label for="music-link">Música</label></h2>
+        <p id="music-help">Cole o link do Spotify ou YouTube</p>
+        <input type="text" id="music-link" aria-describedby="music-help" placeholder="https://...">
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 7: E-mail para Recebimento -->
+      <div class="form-step" data-step="7">
+        <h2><i class="fas fa-envelope" aria-hidden="true"></i> <label for="user-email">Seu E-mail</label></h2>
+        <p id="email-help">Para enviarmos o link da sua página e o QR Code</p>
+        <input type="email" id="user-email" aria-describedby="email-help" placeholder="seu@email.com" required
+        pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}">
+        <div class="error-message" id="email-error"></div>
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+          <button type="button" class="btn-next">Próxima etapa <i class="fas fa-arrow-right"
+              aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <!-- Etapa 8: Plano e Pagamento -->
+      <div class="form-step" data-step="8">
+        <h2><i class="fas fa-credit-card" aria-hidden="true"></i> <span id="payment-label">Escolha seu Plano</span></h2>
+        <div class="plan-cards" aria-labelledby="payment-label">
+          <div class="plan-card featured">
+            <div class="plan-badge">Mais escolhido</div>
+            <h3>Para sempre</h3>
+            <ul>
+              <li><i class="fas fa-check" aria-hidden="true"></i> Texto dedicado</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> QR Code exclusivo</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> 7 imagens</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> Com música</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> Chuva de emojis</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> URL personalizada</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> Suporte 24h</li>
+            </ul>
+            <div class="plan-price">
+              <span class="original-price">R$ 34,00</span>
+              <span class="discount-price">R$ 17,99 <small>/uma vez</small></span>
+            </div>
+            <button type="submit" class="btn-select-plan btn-submit">
+              Selecionar
+            </button>
+          </div>
+
+          <div class="plan-card">
+            <h3>Anual</h3>
+            <ul>
+              <li><i class="fas fa-check" aria-hidden="true"></i> Texto dedicado</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> QR Code exclusivo</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> 3 imagens</li>
+              <li><i class="fas fa-times" aria-hidden="true"></i> A música será removida</li>
+              <li><i class="fas fa-times" aria-hidden="true"></i> Sem chuva de emojis</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> URL personalizada</li>
+              <li><i class="fas fa-check" aria-hidden="true"></i> Suporte 24h</li>
+            </ul>
+            <div class="plan-price">
+              <span class="original-price">R$ 24,00</span>
+              <span class="discount-price">R$ 8,99 <small>/por ano</small></span>
+            </div>
+            <button type="submit" class="btn-select-plan btn-submit">
+              Selecionar
+            </button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-prev"><i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar</button>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Painel de Pré-visualização -->
+    <div class="preview-pane">
+      <div class="preview-wrapper" style="height: 600px;">
+        <!-- Barra de navegador fictícia -->
+        <div class="preview-browser-bar">
+          <div class="browser-dots">
+            <div class="browser-dot red"></div>
+            <div class="browser-dot yellow"></div>
+            <div class="browser-dot green"></div>
+          </div>
+          <div class="browser-url">agradeceai.com/</div>
+        </div>
+
+        <!-- Conteúdo do Preview -->
+        <div class="preview-content" id="preview-content" aria-live="polite" aria-atomic="true">
+          <!-- 1. Título no topo -->
+          <h2 id="preview-title">Título da Página</h2>
+
+          <!-- 2. Slider de Imagens -->
+          <div class="preview-slider-container">
+            <div class="preview-images" id="preview-images">
+              <div class="preview-slider">
+                <div class="preview-slide">
+                  <i class="fas fa-image" aria-hidden="true"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Mensagem do usuário -->
+          <div class="preview-message-container">
+            <p id="preview-message">Sua mensagem aparecerá aqui...</p>
+          </div>
+
+          <!-- 4. Player de Música -->
+          <div class="preview-player" id="preview-player">
+            <div class="music-placeholder">
+              <i class="fas fa-headphones" aria-hidden="true"></i>
+              <p>Prévia da música aparecerá aqui</p>
+            </div>
+          </div>
+
+          <!-- 5. QR Code (Oculto inicialmente) -->
+          <div class="preview-qr" id="preview-qr" style="display: none;">
+            <h3>Seu QR Code</h3>
+            <div class="qr-placeholder">
+              <i class="fas fa-qrcode" aria-hidden="true"></i>
+              <p>Aparecerá após o pagamento</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.3/purify.min.js"></script>
+  <script src="create.js"></script>
+</body>
+
+</html>

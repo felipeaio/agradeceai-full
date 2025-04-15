@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscar Memória Especial | AgradeceAí</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="busca.css">
+</head>
+<body class="search-page">
+  <!-- Efeito de Partículas (Canvas) -->
+  <canvas id="particles-canvas"></canvas>
+  
+  <!-- Luz de Destaque -->
+  <div class="spotlight"></div>
+  
+  <!-- Conteúdo Principal -->
+  <main class="search-container">
+    <div class="search-card">
+      <!-- Cabeçalho -->
+      <div class="search-header">
+        <a href="C:\Users\Felipe\Downloads\AgradeceA-v0.0.2i\AgradeceAi\index.html" class="back-home">
+          <i class="fas fa-arrow-left"></i> Voltar ao Início
+        </a>
+        <div class="logo-wrapper">
+          <span class="logo-pulse">✨</span>
+          <h1>Encontre sua <span class="text-gradient">Memória</span></h1>
+        </div>
+        <p class="subtitle">Digite o código único que recebeu para acessar seu presente especial</p>
+      </div>
+      
+      <!-- Campo de Busca -->
+      <div class="search-box">
+        <div class="input-wrapper">
+          <i class="fas fa-key icon"></i>
+          <input 
+            type="text" 
+            placeholder="Ex: AGR-5H8X2P" 
+            id="memoryCode"
+            class="search-input"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <div class="input-border"></div>
+        </div>
+        <button id="searchBtn" class="btn-magnetic">
+          <span class="btn-text">Desbloquear Memória</span>
+          <span class="btn-icon">
+            <i class="fas fa-lock-open"></i>
+          </span>
+          <span class="btn-particle"></span>
+        </button>
+      </div>
+      
+      <!-- Resultado -->
+      <div id="searchResult" class="search-result">
+        <div class="result-placeholder">
+          <i class="fas fa-heart"></i>
+          <p>Uma surpresa especial aguarda por você</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Efeito de Confetes (hidden) -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/confetti-js@0.0.18/dist/index.min.js"></script>
+  <script src="busca.js"></script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AgradeceAí - Transforme sentimentos em presentes digitais inesquecíveis com mensagens personalizadas e QR codes especiais.">
+  <meta property="og:title" content="AgradeceAí - Mensagens Especiais">
+  <meta property="og:description" content="Crie memórias digitais eternas com mensagens personalizadas, fotos e músicas.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#FF4D6D">
+  
+  <title>AgradeceAí - Mensagens Especiais</title>
+  
+  <!-- Preload de recursos críticos -->
+  <link rel="preload" href="style.css" as="style">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
+  <!-- Favicon (adicione seus próprios arquivos) -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container header__container">
+      <a href="/" class="logo" aria-label="AgradeceAí - Página inicial">
+        <span aria-hidden="true">❤️</span>
+        <h1>AgradeceAí</h1>
+      </a>
+
+      <button class="nav-toggle" aria-expanded="false" aria-controls="primary-navigation">
+        <span class="sr-only">Menu</span>
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+
+      <nav class="nav" data-state="closed" id="primary-navigation">
+        <ul class="nav__list">
+          <li><a href="#como-funciona" class="nav__link">Como Funciona</a></li>
+          <li><a href="#precos" class="nav__link">Preços</a></li>
+          <li><a href="demo/demo.html" class="nav__link">Demonstração</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="inicio">
+    <div class="container hero__grid">
+      <!-- Conteúdo principal -->
+      <div class="hero__content">
+        <span class="badge">NOVO</span>
+        <h2 class="hero__title">
+          <span>Memórias</span>
+          <span class="typed-text" aria-live="polite"></span>
+        </h2>
+
+        <p class="hero__text">
+          Transforme sentimentos em presentes digitais inesquecíveis.
+        </p>
+
+        <div class="hero__actions">
+          <a href="busca/busca.html" class="btn btn--outline">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            Buscar Memória
+          </a>
+
+          <div class="hero__cta">
+            <a href="#" class="btn btn--primary">
+              Criar Agora <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+            <a href="demo/demo.html" class="btn btn--outline">
+              Ver Demonstração <i class="fas fa-eye" aria-hidden="true"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Stats Atualizados -->
+        <div class="custom-stats">
+          <div class="avatars">
+            <div class="avatar-frame">
+              <img src="https://i.pravatar.cc/40?img=1" alt="Cliente satisfeito" width="40" height="40" loading="lazy">
+            </div>
+            <div class="avatar-frame">
+              <img src="https://i.pravatar.cc/40?img=2" alt="Cliente feliz" width="40" height="40" loading="lazy">
+            </div>
+            <div class="avatar-frame">
+              <img src="https://i.pravatar.cc/40?img=3" alt="Cliente encantado" width="40" height="40" loading="lazy">
+            </div>
+          </div>
+
+          <div class="stats-display">
+            <div class="stars" aria-label="Avaliação de 5 estrelas">★★★★★</div>
+            <div class="counter">
+              <span class="number" data-counter="5537">5537</span> memórias criadas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preview Card (Desktop: direita / Mobile: abaixo) -->
+      <div class="hero__preview">
+        <div class="preview-card">
+          <div class="preview-slider" role="region" aria-label="Demonstração de cartões">
+            <div class="slide active" aria-current="true">
+              <div class="preview-image"
+                style="background-image: url('https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80');"
+                role="img" aria-label="Pessoa sorrindo">
+              </div>
+              <div class="preview-message">"Você mudou minha vida. Obrigado por tudo!"</div>
+            </div>
+            <div class="slide">
+              <div class="preview-image"
+                style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=80');"
+                role="img" aria-label="Mulher sorrindo">
+              </div>
+              <div class="preview-message">"Feliz Aniversário! Que seu dia seja incrível!"</div>
+            </div>
+            <div class="preview-qrcode">
+              <div class="qr-code" aria-label="QR Code de exemplo"></div>
+              <div class="qr-text">Scan me</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Como Funciona -->
+  <section class="how-section" id="como-funciona" aria-labelledby="como-funciona-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title" id="como-funciona-title">Como criar sua memória</h2>
+        <p class="section-subtitle">Em apenas 4 passos simples</p>
+      </div>
+      <div class="steps-grid">
+        <article class="step-card">
+          <div class="step-number" aria-hidden="true">1</div>
+          <div class="step-icon">
+            <i class="fas fa-edit" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-title">Personalize</h3>
+          <p class="step-text">Adicione fotos, mensagens e músicas especiais</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number" aria-hidden="true">2</div>
+          <div class="step-icon">
+            <i class="fas fa-credit-card" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-title">Pague</h3>
+          <p class="step-text">Processamento seguro via PIX ou Cartão</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number" aria-hidden="true">3</div>
+          <div class="step-icon">
+            <i class="fas fa-qrcode" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-title">Receba</h3>
+          <p class="step-text">Seu link único e QR Code personalizado</p>
+        </article>
+        <article class="step-card">
+          <div class="step-number" aria-hidden="true">4</div>
+          <div class="step-icon">
+            <i class="fas fa-share-alt" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-title">Compartilhe</h3>
+          <p class="step-text">Envie por WhatsApp, e-mail ou imprima</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Preços -->
+  <section class="pricing-section" id="precos" aria-labelledby="precos-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title" id="precos-title">Planos e Preços</h2>
+        <p class="section-subtitle">Escolha a forma ideal de agradecer e criar memórias inesquecíveis</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Plano Essencial -->
+        <article class="pricing-card">
+          <div class="pricing-header">
+            <h3 class="plan-name">✨ Plano Essencial</h3>
+            <div class="plan-price">
+              <span class="currency">R$</span>
+              <span class="amount">8,99</span>
+              <span class="period">/ano</span>
+            </div>
+          </div>
+          <ul class="plan-features">
+            <li><i class="fas fa-check-circle text-green" aria-hidden="true"></i> Mensagem personalizada</li>
+            <li><i class="fas fa-check-circle text-green" aria-hidden="true"></i> QR Code permanente</li>
+            <li><i class="fas fa-image text-blue" aria-hidden="true"></i> Até 3 imagens</li>
+            <li><i class="fas fa-times-circle text-gray" aria-hidden="true"></i> Sem música de fundo</li>
+            <li><i class="fas fa-times-circle text-gray" aria-hidden="true"></i> Sem emojis animados</li>
+            <li><i class="fas fa-link text-purple" aria-hidden="true"></i> URL personalizada</li>
+            <li><i class="fas fa-headset text-orange" aria-hidden="true"></i> Suporte 24h</li>
+          </ul>
+          <a href="#" class="btn btn--outline">
+            <i class="fas fa-check-circle" aria-hidden="true"></i> Selecionar Plano
+          </a>
+        </article>
+
+        <!-- Plano Eterno -->
+        <article class="pricing-card featured">
+          <div class="recommended-tag">Mais Popular</div>
+          <div class="pricing-header">
+            <h3 class="plan-name">💎 Plano Eterno</h3>
+            <div class="plan-price">
+              <span class="currency">R$</span>
+              <span class="amount">17,99</span>
+              <span class="period">/pagamento único</span>
+            </div>
+          </div>
+          <ul class="plan-features">
+            <li><i class="fas fa-check-circle text-green" aria-hidden="true"></i> Mensagem personalizada</li>
+            <li><i class="fas fa-qrcode text-blue" aria-hidden="true"></i> QR Code estilizado e permanente</li>
+            <li><i class="fas fa-images text-blue" aria-hidden="true"></i> Até 7 imagens</li>
+            <li><i class="fas fa-music text-pink" aria-hidden="true"></i> Música de fundo (Spotify ou YouTube)</li>
+            <li><i class="fas fa-star text-yellow" aria-hidden="true"></i> Emojis animados personalizados</li>
+            <li><i class="fas fa-link text-purple" aria-hidden="true"></i> URL personalizada</li>
+            <li><i class="fas fa-headset text-orange" aria-hidden="true"></i> Suporte 24h</li>
+          </ul>
+          <a href="#" class="btn btn--primary">Quero esse!</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__content">
+        <div class="footer__brand">
+          <h3 class="footer__logo">AgradeceAí</h3>
+          <p class="footer__slogan">Memórias digitais eternas</p>
+        </div>
+        <div class="footer__actions">
+          <a href="/termos" class="footer__link">Termos</a>
+          <a href="/privacidade" class="footer__link">Privacidade</a>
+          <div class="social-links">
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer__copyright">
+        <p>© <span id="current-year">2024</span> AgradeceAí. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="script.js" defer></script>
+  
+  <!-- Analytics (opcional, adicione seu código) -->
+  <script defer>
+    // Atualiza o ano do copyright automaticamente
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+    
+    // Carrega scripts não críticos após o carregamento da página
+    window.addEventListener('load', function() {
+      // Pode carregar scripts de analytics aqui
+    });
+  </script>
+</body>
+
+</html>

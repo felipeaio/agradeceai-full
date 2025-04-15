@@ -1,0 +1,215 @@
+/* terms.css - Versão Final */
+
+/* Estrutura Base */
+.terms-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--dark-1);
+  color: var(--text);
+}
+
+.container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Header Fixo */
+.terms-header {
+  position: sticky;
+  top: 0;
+  background: var(--dark-2);
+  padding: 1rem 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.terms-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.back-btn {
+  color: var(--primary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Conteúdo Principal */
+.terms-main {
+  flex: 1;
+  padding: 2rem 0;
+}
+
+.terms-card {
+  background: var(--dark-2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.terms-heading {
+  text-align: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.terms-heading h1 {
+  color: var(--primary);
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.update-date {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Conteúdo dos Termos */
+.terms-content {
+  padding: 0 2rem;
+  flex: 1;
+}
+
+.term-section {
+  padding: 1.5rem 0;
+  border-bottom: 1px dashed rgba(255,255,255,0.05);
+}
+
+.term-section:last-child {
+  border-bottom: none;
+}
+
+.term-section h2 {
+  color: var(--text);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.term-section h2 span {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.term-section p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.responsibilities-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.responsibilities-list li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.responsibilities-list i {
+  color: var(--accent);
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.inline-link {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Footer do Card de Termos */
+.terms-footer {
+  margin-top: auto;
+  padding: 1.5rem;
+  background: rgba(0,0,0,0.1);
+  border-radius: 0 0 var(--radius) var(--radius);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer-content {
+  text-align: center;
+}
+
+.terms-footer h3 {
+  color: var(--text);
+  margin-bottom: 0.5rem;
+}
+
+.contact-link {
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+/* Footer da Página */
+.page-footer {
+  background: var(--dark-2);
+  padding: 1.5rem 0;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .terms-heading,
+  .terms-content {
+    padding: 1.5rem;
+  }
+  
+  .terms-heading h1 {
+    font-size: 1.5rem;
+  }
+  
+  .term-section {
+    padding: 1.25rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .terms-heading h1 {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .term-section h2 {
+    font-size: 1.1rem;
+  }
+}
