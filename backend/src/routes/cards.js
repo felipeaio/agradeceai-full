@@ -37,8 +37,11 @@ const cardSchema = z.object({
     message: z.string()
       .min(10, { message: "Mensagem deve ter pelo menos 10 caracteres" })
       .max(5000, { message: "Mensagem deve ter no máximo 5000 caracteres" }),
-    background: z.string()
-      .regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, { message: "Cor de fundo inválida" })
+      background: z.string()
+      .nullable()
+      .refine(val => !val || ['none', 'starry-sky', 'emoji-rain', 'rain'].includes(val), {
+        message: "Efeito de fundo inválido"
+      })
       .optional(),
     images: z.array(z.string().url({ message: "URL de imagem inválida" }))
       .max(7, { message: "Máximo de 7 imagens permitidas" }),

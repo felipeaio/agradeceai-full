@@ -3,12 +3,38 @@
  * Configurações Globais
  * =============================================
  */
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/+esm';
+
+console.log('create.js carregado!');
+
+// Configurações do Supabase
+const supabaseUrl = 'https://tswzuxuthwbudkztvxod.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzd3p1eHV0aHdidWRrenR2eG9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ2Nzc2MjgsImV4cCI6MjA2MDI1MzYyOH0.upqHqTvYg65dEeYBetq6ZykT-8x0GfjX7xBMaFThtYA';
+
+// Inicialização segura do Supabase
+async function initializeSupabase() {
+  try {
+    console.log('Inicializando Supabase com ES Modules (+esm)');
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    window.supabase = supabaseClient;
+    console.log('Supabase inicializado com sucesso');
+    return true;
+  } catch (error) {
+    console.error('Erro ao iniciar Supabase:', error.message);
+    window.alert('Erro ao conectar ao servidor. Algumas funcionalidades estarão limitadas.');
+    return false;
+  }
+}
+
+// Configurações da aplicação
 const CONFIG = {
   MAX_STEPS: 8,
   MAX_IMAGES: 7,
+  MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB por arquivo
   MAX_MESSAGE_LENGTH: 5000,
   SLIDE_DURATION: 3000,
-  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   SANITIZATION: {
     MAX_PAGE_NAME_LENGTH: 30,
@@ -19,12 +45,12 @@ const CONFIG = {
     BASE_DURATION: 1,
     DROP_COLOR: 'rgba(200, 230, 255, 0.8)',
     SPLASH_COLOR: 'rgba(200, 230, 255, 0.6)',
-    UPDATE_INTERVAL: 2000, // Intervalo de limpeza em ms
-    MAX_DROPS: 100 // Limite máximo de gotas simultâneas
+    UPDATE_INTERVAL: 2000,
+    MAX_DROPS: 100
   },
   EMOJI_RAIN: {
-    DENSITY: 80,      // Quantidade total de emojis visíveis
-    SPAWN_RATE: 15    // Emojis novos por segundo
+    DENSITY: 80,
+    SPAWN_RATE: 15
   },
   EMOJIS: ['❤️', '💖', '💘', '💕', '💞', '💓']
 };
@@ -38,20 +64,14 @@ const DOM = {
   FORM: document.getElementById('creation-form'),
   STEPS: document.querySelectorAll('.form-step'),
   PROGRESS_STEPS: document.querySelectorAll('.progress-step'),
-
-  // Inputs
   PAGE_NAME_INPUT: document.getElementById('page-name'),
   PAGE_TITLE_INPUT: document.getElementById('page-title'),
   MESSAGE_TEXTAREA: document.getElementById('page-message'),
   MUSIC_LINK_INPUT: document.getElementById('music-link'),
   EMAIL_INPUT: document.getElementById('user-email'),
   FILE_INPUT: document.getElementById('image-upload'),
-
-  // Áreas interativas
   UPLOAD_AREA: document.getElementById('upload-area'),
   THUMBNAILS_CONTAINER: document.getElementById('thumbnails'),
-
-  // Pré-visualização
   PREVIEW_TITLE: document.getElementById('preview-title'),
   PREVIEW_MESSAGE: document.getElementById('preview-message'),
   PREVIEW_IMAGES: document.getElementById('preview-images'),
@@ -60,7 +80,9 @@ const DOM = {
   PREVIEW_CONTENT: document.getElementById('preview-content'),
   BROWSER_URL: document.querySelector('.browser-url'),
   CHAR_COUNTER: document.getElementById('char-counter'),
-  EMAIL_ERROR: document.getElementById('email-error')
+  EMAIL_ERROR: document.getElementById('email-error'),
+  NEXT_BUTTON: document.querySelector('.btn-next'),
+  PREV_BUTTON: document.querySelector('.btn-prev')
 };
 
 /**
@@ -69,9 +91,9 @@ const DOM = {
  * =============================================
  */
 const STATE = {
+  _selectedImages: [],
   currentStep: 1,
-  selectedBackground: 'none',
-  selectedImages: [],
+  selectedBackground: null,
   currentImageIndex: 0,
   imageSliderInterval: null,
   isUploading: false,
@@ -80,14 +102,27 @@ const STATE = {
     emoji: null
   },
   formData: {
-    pageName: '',
-    pageTitle: '',
-    message: '',
-    background: 'none',
-    images: [],
-    musicLink: '',
-    plan: '',
-    userEmail: ''
+    email: '',
+    plano: '',
+    status_pagamento: 'pendente',
+    conteudo: {
+      pageName: '',
+      title: '',
+      message: '',
+      background: null,
+      images: [],
+      music: null
+    }
+  },
+
+  // Getters e Setters para sincronização automática
+  set selectedImages(images) {
+    this._selectedImages = images;
+    this.formData.conteudo.images = images;
+  },
+
+  get selectedImages() {
+    return this._selectedImages;
   }
 };
 
@@ -101,24 +136,21 @@ class FormValidator {
     if (!name || name.trim().length < 3) {
       return { valid: false, message: 'Nome da página inválido! Mínimo 3 caracteres' };
     }
-
-    const sanitized = this.sanitizePageName(name);
-    if (!sanitized) {
-      return { valid: false, message: 'Nome contém caracteres inválidos' };
+    if (name.trim().length > CONFIG.SANITIZATION.MAX_PAGE_NAME_LENGTH) {
+      return { valid: false, message: `Nome da página deve ter no máximo ${CONFIG.SANITIZATION.MAX_PAGE_NAME_LENGTH} caracteres` };
     }
-
     return { valid: true };
   }
 
   static sanitizePageName(name) {
     if (!name) return '';
-
-    return name.trim()
+    return DOMPurify.sanitize(name.trim()
       .toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '')
-      .substring(0, CONFIG.SANITIZATION.MAX_PAGE_NAME_LENGTH);
+      .substring(0, CONFIG.SANITIZATION.MAX_PAGE_NAME_LENGTH)
+    );
   }
 
   static validateImages(images) {
@@ -132,11 +164,12 @@ class FormValidator {
     if (!title || title.trim().length === 0) {
       return { valid: false, message: 'Título da página é obrigatório!' };
     }
-
     if (title.trim().length < 3) {
       return { valid: false, message: 'Título muito curto! Mínimo 3 caracteres' };
     }
-
+    if (title.trim().length > 50) {
+      return { valid: false, message: 'Título deve ter no máximo 50 caracteres' };
+    }
     return { valid: true };
   }
 
@@ -144,11 +177,12 @@ class FormValidator {
     if (!message || message.trim().length === 0) {
       return { valid: false, message: 'Mensagem é obrigatória!' };
     }
-
     if (message.trim().length < 10) {
       return { valid: false, message: 'Mensagem muito curta! Mínimo 10 caracteres' };
     }
-
+    if (message.trim().length > CONFIG.MAX_MESSAGE_LENGTH) {
+      return { valid: false, message: `Mensagem deve ter no máximo ${CONFIG.MAX_MESSAGE_LENGTH} caracteres` };
+    }
     return { valid: true };
   }
 
@@ -156,13 +190,10 @@ class FormValidator {
     if (!email) {
       return { valid: false, message: 'E-mail é obrigatório!' };
     }
-
-    // Regex corrigida
     const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
     if (!emailRegex.test(email)) {
       return { valid: false, message: 'Por favor, insira um e-mail válido' };
     }
-
     return { valid: true };
   }
 }
@@ -170,20 +201,13 @@ class FormValidator {
 class EffectManager {
   static applyBackgroundEffect(effect, container) {
     this.clearEffects(container);
-
     container.className = `preview-content ${effect}`;
     container.setAttribute('data-bg', effect);
 
-    switch (effect) {
-      case 'emoji-rain':
-        this.startEmojiRain(container);
-        break;
-      case 'rain':
-        this.startRainEffect(container);
-        break;
-      case 'starry-sky':
-        // Implementação existente
-        break;
+    if (effect === 'emoji-rain') {
+      this.startEmojiRain(container);
+    } else if (effect === 'rain') {
+      this.startRainEffect(container);
     }
   }
 
@@ -192,22 +216,13 @@ class EffectManager {
       const emoji = document.createElement('div');
       emoji.className = 'emoji-falling';
       emoji.textContent = CONFIG.EMOJIS[Math.floor(Math.random() * CONFIG.EMOJIS.length)];
-
-      // Posição horizontal aleatória mas fixa durante a queda
-      const startX = Math.random() * 100;
-      emoji.style.setProperty('--start-x', `${startX}vw`); // Usando CSS variable
-
-      // Configurações de animação
+      emoji.style.setProperty('--start-x', `${Math.random() * 100}vw`);
       emoji.style.animationDuration = `${3 + Math.random() * 2}s`;
       emoji.style.animationDelay = `-${Math.random() * 2}s`;
-
       container.appendChild(emoji);
-
-      // Remoção após animação
       setTimeout(() => emoji.remove(), 5000);
     };
 
-    // Intervalo de criação
     const interval = setInterval(createEmoji, 150);
     STATE.activeEffects.emoji = { interval };
   }
@@ -216,18 +231,12 @@ class EffectManager {
     const createRainDrop = () => {
       const drop = document.createElement('div');
       drop.className = 'rain-drop';
-
-      // Posicionamento
       drop.style.left = `${Math.random() * 100}%`;
       drop.style.animationDuration = `${0.5 + Math.random() * 1}s`;
-
       container.appendChild(drop);
-
-      // Remove após animação
       setTimeout(() => drop.remove(), 2000);
     };
 
-    // Iniciar fluxo
     const interval = setInterval(createRainDrop, 50);
     STATE.activeEffects.rain = { interval };
   }
@@ -236,7 +245,6 @@ class EffectManager {
     container.className = 'preview-content';
     container.removeAttribute('data-bg');
 
-    // Limpar todos os efeitos
     if (STATE.activeEffects.emoji) {
       clearInterval(STATE.activeEffects.emoji.interval);
       container.querySelectorAll('.emoji-falling').forEach(e => e.remove());
@@ -249,200 +257,83 @@ class EffectManager {
   }
 }
 
-class RainEffectManager {
-  constructor(container) {
-    this.container = container;
-    this.drops = [];
-    this.updateInterval = null;
-    this.init();
-  }
-
-  init() {
-    this.createRainEffect();
-    this.setupResizeListener();
-  }
-
-  createRainEffect() {
-    // Cria o container do efeito
-    this.rainContainer = document.createElement('div');
-    this.rainContainer.className = 'rain-effect';
-    this.container.appendChild(this.rainContainer);
-
-    // Cria gotas iniciais em diferentes estágios
-    for (let i = 0; i < CONFIG.RAIN_EFFECT.DROP_COUNT; i++) {
-      this.createDrop(Math.random());
-    }
-
-    // Inicia o intervalo de limpeza
-    this.startCleanupInterval();
-  }
-
-  createDrop(progress = 0) {
-    if (this.drops.length >= CONFIG.RAIN_EFFECT.MAX_DROPS) return;
-
-    const drop = document.createElement('div');
-    drop.className = 'rain-drop';
-
-    const left = Math.random() * 100;
-    const duration = CONFIG.RAIN_EFFECT.BASE_DURATION + Math.random() * 0.5;
-    const angle = 10 + Math.random() * 10 * (Math.random() > 0.5 ? 1 : -1);
-    const length = 20 + Math.random() * 15;
-    const startY = -length;
-    const delay = Math.random() * duration;
-
-    // Calcula a posição inicial baseada no progresso
-    const initialOffset = progress * window.innerHeight * 1.2;
-
-    drop.style.cssText = `
-      left: ${left}%;
-      top: ${startY}px;
-      height: ${length}px;
-      transform: translateY(${initialOffset}px) rotate(${angle}deg);
-      background: linear-gradient(to bottom, transparent, ${CONFIG.RAIN_EFFECT.DROP_COLOR});
-      animation: rain-drop-fall ${duration}s linear ${delay}s infinite;
-      will-change: transform, opacity;
-    `;
-
-    this.rainContainer.appendChild(drop);
-    this.drops.push({
-      element: drop,
-      createdAt: Date.now()
-    });
-  }
-
-  startCleanupInterval() {
-    this.updateInterval = setInterval(() => {
-      this.cleanupDrops();
-      this.balanceDrops();
-    }, CONFIG.RAIN_EFFECT.UPDATE_INTERVAL);
-  }
-
-  cleanupDrops() {
-    const now = Date.now();
-    const viewportHeight = window.innerHeight;
-
-    this.drops = this.drops.filter(dropInfo => {
-      const rect = dropInfo.element.getBoundingClientRect();
-      const isVisible = rect.bottom > 0 && rect.top < viewportHeight;
-
-      if (!isVisible || now - dropInfo.createdAt > 10000) {
-        dropInfo.element.remove();
-        return false;
-      }
-      return true;
-    });
-  }
-
-  balanceDrops() {
-    const neededDrops = CONFIG.RAIN_EFFECT.DROP_COUNT - this.drops.length;
-    if (neededDrops > 0) {
-      for (let i = 0; i < neededDrops; i++) {
-        this.createDrop();
-      }
-    }
-  }
-
-  setupResizeListener() {
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        this.updateDropsPosition();
-      }, 200);
-    });
-  }
-
-  updateDropsPosition() {
-    this.drops.forEach(dropInfo => {
-      const left = parseFloat(dropInfo.element.style.left);
-      dropInfo.element.style.left = `${left * (window.innerWidth / this.container.offsetWidth)}%`;
-    });
-  }
-
-  destroy() {
-    clearInterval(this.updateInterval);
-    this.rainContainer.remove();
-    window.removeEventListener('resize', this.updateDropsPosition);
-  }
-}
-
 class ImageHandler {
   static async processFiles(files) {
     const validFiles = Array.from(files).filter(file =>
       CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type) &&
-      file.size <= CONFIG.MAX_FILE_SIZE
+      file.size <= CONFIG.MAX_IMAGE_SIZE
     );
 
     if (!validFiles.length) {
-      throw new Error('Escolha imagens válidas (JPEG, PNG, GIF, WEBP, até 5MB).');
+      throw new Error(`Escolha imagens válidas (${CONFIG.ALLOWED_IMAGE_TYPES.join(', ')}), até ${CONFIG.MAX_IMAGE_SIZE / 1024 / 1024}MB cada.`);
     }
 
     if (STATE.selectedImages.length + validFiles.length > CONFIG.MAX_IMAGES) {
       throw new Error(`No máximo ${CONFIG.MAX_IMAGES} imagens são permitidas.`);
     }
 
-    const processedImages = await Promise.all(validFiles.map(file => this.compressImage(file)));
+    const uploadPromises = validFiles.map(file => this.uploadImage(file));
+    const results = await Promise.allSettled(uploadPromises);
 
-    // Checar tamanho total em KB
-    const totalSize = processedImages.reduce((sum, img) => {
-      const base64Size = Math.round(img.length / 1024); // Tamanho aproximado
-      return sum + base64Size;
-    }, 0);
+    const successfulUploads = results
+      .filter(result => result.status === 'fulfilled' && result.value)
+      .map(result => result.value);
 
-    if (totalSize > 50) { // 50KB para ficar seguro
-      throw new Error('Imagens muito grandes após compressão. Use fotos menores.');
+    if (successfulUploads.length === 0 && results.some(r => r.status === 'rejected')) {
+      throw new Error('Falha ao enviar imagens. Tente novamente.');
     }
 
-    return processedImages;
+    return successfulUploads;
   }
 
-  static compressImage(file) {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const compressed = await this._compressImageData(event.target.result, 300, 0.2);
-        resolve(compressed);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
+  static async uploadImage(file) {
+    if (!window.supabase) {
+      throw new Error('Serviço de armazenamento indisponível no momento.');
+    }
 
-  static _compressImageData(imageData, maxWidth, quality) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.src = imageData;
+    try {
+      // Mostrar progresso
+      const progressId = `progress-${Date.now()}`;
+      const progressElement = document.createElement('div');
+      progressElement.id = progressId;
+      progressElement.className = 'upload-progress';
+      DOM.UPLOAD_AREA.appendChild(progressElement);
 
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
+      const fileId = crypto.randomUUID();
+      const fileExt = file.name.split('.').pop();
+      const filePath = `card-images/${fileId}.${fileExt}`;
 
-        let width = img.width;
-        let height = img.height;
+      const { data, error } = await window.supabase.storage
+        .from('card-images')
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: true,
+          cacheControl: '3600'
+        });
 
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
+      progressElement.remove();
 
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(img, 0, 0, width, height);
+      if (error) throw error;
 
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-    });
+      const { data: { publicUrl } } = window.supabase.storage
+        .from('card-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      throw new Error(`Falha ao enviar "${file.name}": ${error.message}`);
+    }
   }
 
   static updateThumbnails() {
     DOM.THUMBNAILS_CONTAINER.innerHTML = '';
-
     STATE.selectedImages.forEach((img, index) => {
       const thumbnail = document.createElement('div');
       thumbnail.className = 'thumbnail';
       thumbnail.innerHTML = `
         <img src="${img}" alt="Imagem ${index + 1}" loading="lazy">
-        <button class="thumbnail-remove" data-index="${index}" 
-                aria-label="Remover imagem">
+        <button class="thumbnail-remove" data-index="${index}" aria-label="Remover imagem">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
@@ -455,12 +346,9 @@ class ImageHandler {
   static initImageSlider() {
     const slider = document.createElement('div');
     slider.className = 'preview-slider';
-
     const slide = document.createElement('div');
     slide.className = 'preview-slide';
     slide.innerHTML = '<i class="fas fa-image" aria-hidden="true"></i>';
-    slider.appendChild(slide);
-
     DOM.PREVIEW_IMAGES.innerHTML = '';
     DOM.PREVIEW_IMAGES.appendChild(slider);
   }
@@ -479,6 +367,7 @@ class ImageHandler {
         const slide = document.createElement('div');
         slide.className = 'preview-slide';
         slide.style.backgroundImage = `url(${img})`;
+        slide.setAttribute('aria-hidden', 'false');
         slider.appendChild(slide);
       });
     }
@@ -508,14 +397,19 @@ class ImageHandler {
 
 class MusicPlayer {
   static updatePreview() {
-    const link = STATE.formData.musicLink.trim();
+    const link = STATE.formData.conteudo.music || '';
     const player = DOM.PREVIEW_PLAYER;
 
-    // Reset classes
+    // Limpar player existente
+    player.innerHTML = '';
     player.classList.remove('has-music', 'has-error');
 
-    // Limpar conteúdo
-    player.innerHTML = '';
+    // Remover todos os iframes primeiro para evitar vazamento de memória
+    const iframes = player.querySelectorAll('iframe');
+    iframes.forEach(iframe => {
+      iframe.src = '';
+      iframe.remove();
+    });
 
     if (!link) {
       this.showPlaceholder(player);
@@ -527,26 +421,15 @@ class MusicPlayer {
 
     if (this.isYouTubeLink(sanitizedLink)) {
       const videoId = this.extractYouTubeId(sanitizedLink);
-      playerContent = videoId ?
-        this.createYouTubePlayer(videoId) :
-        this.createError('Link do YouTube inválido');
-    }
-    else if (this.isSpotifyLink(sanitizedLink)) {
+      playerContent = videoId ? this.createYouTubePlayer(videoId) : this.createError('Link do YouTube inválido');
+    } else if (this.isSpotifyLink(sanitizedLink)) {
       const spotifyId = this.extractSpotifyId(sanitizedLink);
-      playerContent = spotifyId ?
-        this.createSpotifyPlayer(spotifyId) :
-        this.createError('Link do Spotify inválido');
-    }
-    else {
+      playerContent = spotifyId ? this.createSpotifyPlayer(spotifyId) : this.createError('Link do Spotify inválido');
+    } else {
       playerContent = this.createError('Insira um link válido do YouTube ou Spotify');
     }
 
-    if (playerContent.classList.contains('music-error')) {
-      player.classList.add('has-error');
-    } else {
-      player.classList.add('has-music');
-    }
-
+    player.classList.add(playerContent.classList.contains('music-error') ? 'has-error' : 'has-music');
     player.appendChild(playerContent);
   }
 
@@ -628,9 +511,28 @@ class StateManager {
     if (draft) {
       try {
         const parsed = JSON.parse(draft);
-        Object.assign(STATE.formData, parsed);
-        STATE.selectedImages = STATE.formData.images || [];
-        STATE.selectedBackground = STATE.formData.background || 'none';
+
+        // Validação básica dos dados
+        if (!parsed.conteudo) throw new Error('Estrutura de dados inválida');
+
+        STATE.formData = {
+          email: parsed.email || '',
+          plano: parsed.plano || '',
+          status_pagamento: parsed.status_pagamento || 'pendente',
+          conteudo: {
+            pageName: parsed.conteudo.pageName || '',
+            title: parsed.conteudo.title || '',
+            message: parsed.conteudo.message || '',
+            background: parsed.conteudo.background || null,
+            images: parsed.conteudo.images || [],
+            music: parsed.conteudo.music || null
+          }
+        };
+
+        // Sincroniza com o getter/setter
+        STATE.selectedImages = STATE.formData.conteudo.images;
+        STATE.selectedBackground = STATE.formData.conteudo.background;
+
         this.updateUIFromState();
       } catch (e) {
         console.error('Erro ao carregar rascunho:', e);
@@ -640,9 +542,15 @@ class StateManager {
   }
 
   static saveDraft() {
-    STATE.formData.images = STATE.selectedImages;
-    STATE.formData.background = STATE.selectedBackground;
-    localStorage.setItem('agradeceai_draft', JSON.stringify(STATE.formData));
+    try {
+      // Garante que tudo está sincronizado antes de salvar
+      STATE.formData.conteudo.images = STATE.selectedImages;
+      STATE.formData.conteudo.background = STATE.selectedBackground;
+
+      localStorage.setItem('agradeceai_draft', JSON.stringify(STATE.formData));
+    } catch (e) {
+      console.error('Erro ao salvar rascunho:', e);
+    }
   }
 
   static clearDraft() {
@@ -650,20 +558,19 @@ class StateManager {
   }
 
   static updateUIFromState() {
-    // Verificação de segurança para o e-mail na etapa 8
-    if (STATE.currentStep === 8 && !STATE.formData.userEmail) {
-      NavigationManager.showAlert('Por favor, insira seu e-mail primeiro');
-      STATE.currentStep = 7; // Volta para a etapa do e-mail
+    if (STATE.currentStep === 8 && !STATE.formData.email) {
+      NavigationManager.showAlert('Insira seu e-mail primeiro');
+      STATE.currentStep = 7;
       NavigationManager.updateProgressBar();
-      return; // Impede a atualização da UI até o e-mail ser preenchido
+      return;
     }
 
     // Atualiza inputs
-    DOM.PAGE_NAME_INPUT.value = STATE.formData.pageName;
-    DOM.PAGE_TITLE_INPUT.value = STATE.formData.pageTitle;
-    DOM.MESSAGE_TEXTAREA.value = STATE.formData.message;
-    DOM.MUSIC_LINK_INPUT.value = STATE.formData.musicLink;
-    DOM.EMAIL_INPUT.value = STATE.formData.userEmail || '';
+    DOM.PAGE_NAME_INPUT.value = STATE.formData.conteudo.pageName || '';
+    DOM.PAGE_TITLE_INPUT.value = STATE.formData.conteudo.title || '';
+    DOM.MESSAGE_TEXTAREA.value = STATE.formData.conteudo.message || '';
+    DOM.MUSIC_LINK_INPUT.value = STATE.formData.conteudo.music || '';
+    DOM.EMAIL_INPUT.value = STATE.formData.email || '';
 
     // Atualiza previews
     this.updateBrowserUrl();
@@ -674,21 +581,23 @@ class StateManager {
     ImageHandler.updateImageSlider();
 
     // Atualiza background selecionado
-    const bgOption = document.querySelector(`.background-option[data-bg="${STATE.selectedBackground}"]`);
-    if (bgOption) bgOption.click();
+    const bgOption = document.querySelector(`.background-option[data-bg="${STATE.selectedBackground || 'none'}"]`);
+    if (bgOption && !bgOption.classList.contains('selected')) {
+      bgOption.click();
+    }
   }
 
   static updateBrowserUrl() {
-    const sanitized = FormValidator.sanitizePageName(STATE.formData.pageName);
-    DOM.BROWSER_URL.textContent = `agradeceai.com/${sanitized || ''}`;
+    const sanitized = FormValidator.sanitizePageName(STATE.formData.conteudo.pageName);
+    DOM.BROWSER_URL.textContent = `agradeceai.com/${sanitized || 'seu-link'}`;
   }
 
   static updateTitlePreview() {
-    DOM.PREVIEW_TITLE.textContent = DOMPurify.sanitize(STATE.formData.pageTitle) || 'Título da Página';
+    DOM.PREVIEW_TITLE.textContent = DOMPurify.sanitize(STATE.formData.conteudo.title) || 'Título da Página';
   }
 
   static updateMessagePreview() {
-    const message = STATE.formData.message;
+    const message = STATE.formData.conteudo.message || '';
     const remaining = CONFIG.MAX_MESSAGE_LENGTH - message.length;
     DOM.CHAR_COUNTER.textContent = `${remaining} caracteres restantes`;
 
@@ -699,17 +608,19 @@ class StateManager {
 }
 
 class NavigationManager {
-  static isNavigating = false; // Bloqueio para evitar cliques múltiplos
+  static isNavigating = false;
 
-  static goToNextStep() {
-    if (this.isNavigating || STATE.currentStep >= CONFIG.MAX_STEPS) return;
+  static async goToNextStep() {
+    if (this.isNavigating || STATE.currentStep >= CONFIG.MAX_STEPS) {
+      console.log('Navegação bloqueada - já em transição ou no último passo');
+      return;
+    }
 
-    // Validação por etapa
     const validations = {
-      1: () => FormValidator.validatePageName(STATE.formData.pageName),
-      2: () => FormValidator.validatePageTitle(STATE.formData.pageTitle),
-      3: () => FormValidator.validateMessage(STATE.formData.message),
-      7: () => FormValidator.validateEmail(STATE.formData.userEmail)
+      1: () => FormValidator.validatePageName(STATE.formData.conteudo.pageName),
+      2: () => FormValidator.validatePageTitle(STATE.formData.conteudo.title),
+      3: () => FormValidator.validateMessage(STATE.formData.conteudo.message),
+      7: () => FormValidator.validateEmail(STATE.formData.email)
     };
 
     if (validations[STATE.currentStep]) {
@@ -721,41 +632,55 @@ class NavigationManager {
       }
     }
 
-    this.animateStepTransition(true);
+    await this.animateStepTransition(true);
   }
 
-  static goToPrevStep() {
+  static async goToPrevStep() {
     if (this.isNavigating || STATE.currentStep <= 1) return;
-    this.animateStepTransition(false);
+    await this.animateStepTransition(false);
   }
 
-  static animateStepTransition(forward) {
-    this.isNavigating = true;
-
-    const currentStepElement = DOM.STEPS[STATE.currentStep - 1];
-    currentStepElement.style.opacity = '0';
-    currentStepElement.style.transform = forward ? 'translateX(-20px)' : 'translateX(20px)';
-    currentStepElement.classList.remove('active');
-
-    // Atualiza o estado apenas uma vez
-    const nextStepIndex = forward ? STATE.currentStep + 1 : STATE.currentStep - 1;
-
-    requestAnimationFrame(() => {
-      const nextStepElement = DOM.STEPS[nextStepIndex - 1];
-      nextStepElement.classList.add('active');
-      nextStepElement.style.opacity = '0';
-      nextStepElement.style.transform = forward ? 'translateX(20px)' : 'translateX(-20px)';
-
-      requestAnimationFrame(() => {
-        nextStepElement.style.opacity = '1';
-        nextStepElement.style.transform = 'translateX(0)';
-
-        // Atualiza o estado após a transição
-        STATE.currentStep = nextStepIndex;
-        this.updateProgressBar();
-        this.scrollToTop();
-        this.isNavigating = false; // Libera o bloqueio
-      });
+  static async animateStepTransition(forward) {
+    return new Promise((resolve) => {
+      try {
+        console.log('Iniciando transição. CurrentStep:', STATE.currentStep, 'Forward:', forward);
+        this.isNavigating = true;
+        const currentStepElement = DOM.STEPS[STATE.currentStep - 1];
+        const nextStepIndex = forward ? STATE.currentStep + 1 : STATE.currentStep - 1;
+        const nextStepElement = DOM.STEPS[nextStepIndex - 1];
+        console.log('Current Element:', currentStepElement);
+        console.log('Next Element:', nextStepElement);
+  
+        currentStepElement.style.opacity = '0';
+        currentStepElement.style.transform = forward ? 'translateX(-20px)' : 'translateX(20px)';
+        currentStepElement.classList.remove('active');
+  
+        nextStepElement.classList.add('active');
+        nextStepElement.style.opacity = '0';
+        nextStepElement.style.transform = forward ? 'translateX(20px)' : 'translateX(-20px)';
+  
+        requestAnimationFrame(() => {
+          console.log('Executando requestAnimationFrame para etapa:', nextStepIndex);
+          try {
+            nextStepElement.style.opacity = '1';
+            nextStepElement.style.transform = 'translateX(0)';
+            STATE.currentStep = nextStepIndex;
+            this.updateProgressBar();
+            this.scrollToTop();
+            this.isNavigating = false;
+            console.log('Transição concluída. isNavigating:', this.isNavigating);
+            resolve();
+          } catch (error) {
+            console.error('Erro na animação interna:', error);
+            this.isNavigating = false;
+            resolve();
+          }
+        });
+      } catch (error) {
+        console.error('Erro ao iniciar animação:', error);
+        this.isNavigating = false;
+        resolve();
+      }
     });
   }
 
@@ -766,7 +691,11 @@ class NavigationManager {
       3: DOM.MESSAGE_TEXTAREA,
       7: DOM.EMAIL_INPUT
     };
-    fields[step]?.focus();
+
+    if (fields[step]) {
+      fields[step].focus();
+      fields[step].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   static updateProgressBar() {
@@ -784,24 +713,38 @@ class NavigationManager {
   }
 
   static showAlert(message, type = 'error', duration = 3000) {
-    const existingAlert = document.querySelector('.form-alert');
-    if (existingAlert) existingAlert.remove();
+    // Remover alertas existentes
+    const existingAlerts = document.querySelectorAll('.form-alert');
+    existingAlerts.forEach(alert => {
+      alert.classList.remove('show');
+      setTimeout(() => alert.remove(), 400);
+    });
 
+    // Criar novo alerta
     const alert = document.createElement('div');
     alert.className = `form-alert ${type}`;
-    alert.innerHTML = DOMPurify.sanitize(message);
     alert.setAttribute('role', 'alert');
+    alert.setAttribute('aria-live', 'assertive');
 
+    // Conteúdo do alerta
     const icon = document.createElement('span');
     icon.className = 'alert-icon';
     icon.setAttribute('aria-hidden', 'true');
-    alert.prepend(icon);
+    icon.textContent = type === 'error' ? '⚠️' : '✅';
 
+    const text = document.createElement('span');
+    text.textContent = DOMPurify.sanitize(message);
+
+    alert.append(icon, text);
     document.body.appendChild(alert);
 
+    // Forçar recálculo de layout para animação
     void alert.offsetWidth;
+
+    // Animação de entrada
     alert.classList.add('show');
 
+    // Remover após duração
     setTimeout(() => {
       alert.classList.remove('show');
       setTimeout(() => alert.remove(), 400);
@@ -809,33 +752,187 @@ class NavigationManager {
   }
 }
 
-/**
- * =============================================
- * Inicialização e Event Listeners
- * =============================================
- */
 class App {
-  static init() {
-    this.setupEventListeners();
-    ImageHandler.initImageSlider();
-    StateManager.loadDraft();
-    this.setupMessageCounter();
-    this.registerServiceWorker();
-    this.initBackgroundPreviews();
-    this.setupEmailInput();
+  static async validateFormData(data) {
+    const validations = [
+      FormValidator.validateEmail(data.email),
+      FormValidator.validatePageName(data.conteudo.pageName),
+      FormValidator.validatePageTitle(data.conteudo.title),
+      FormValidator.validateMessage(data.conteudo.message),
+      FormValidator.validateImages(data.conteudo.images),
+      { valid: ['para_sempre', 'anual'].includes(data.plano), message: 'Escolha um plano válido' }
+    ];
+
+    const error = validations.find(v => !v.valid);
+    if (error) throw new Error(error.message);
+
+    if (data.conteudo.music && !MusicPlayer.isYouTubeLink(data.conteudo.music) && !MusicPlayer.isSpotifyLink(data.conteudo.music)) {
+      throw new Error('Link de música deve ser do YouTube ou Spotify');
+    }
   }
 
-  static initBackgroundPreviews() {
-    // Força a renderização dos efeitos de background
-    document.querySelectorAll('.bg-preview.emoji-rain, .bg-preview.rain').forEach(preview => {
-      void preview.offsetWidth; // Trigger reflow
-    });
+  static async handleFormSubmission() {
+    const submitBtn = document.querySelector('.btn-submit');
+    if (!submitBtn) return;
+
+    try {
+      // Feedback visual
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+
+      // Validar dados
+      await this.validateFormData(STATE.formData);
+
+      // Enviar dados
+      const response = await this.submitFormData(STATE.formData);
+
+      // Feedback de sucesso
+      NavigationManager.showAlert(
+        `Cartão criado com sucesso! Acesse em: ${response.url}`,
+        'success'
+      );
+
+      // Limpar rascunho e redirecionar
+      StateManager.clearDraft();
+      setTimeout(() => {
+        window.location.href = response.redirectUrl || '/obrigado.html';
+      }, 3000);
+    } catch (error) {
+      console.error('Erro no envio do formulário:', error);
+      NavigationManager.showAlert(error.message || 'Erro ao criar cartão');
+
+      // Restaurar botão
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Selecionar';
+    }
+  }
+
+  static async submitFormData(data) {
+    if (!window.supabase) {
+      throw new Error('Serviço indisponível no momento. Tente novamente mais tarde.');
+    }
+
+    try {
+      const id = crypto.randomUUID();
+      const token_edit = crypto.randomUUID();
+      const sanitizedPageName = FormValidator.sanitizePageName(data.conteudo.pageName);
+      const url = `agradeceai.com/c/${id}-${sanitizedPageName}`;
+
+      // Preparar dados para inserção
+      const cardData = {
+        id,
+        email: data.email,
+        url,
+        status_pagamento: data.status_pagamento || 'pendente',
+        plano: data.plano,
+        token_edit,
+        conteudo: {
+          pageName: data.conteudo.pageName,
+          title: data.conteudo.title,
+          message: data.conteudo.message,
+          background: data.conteudo.background,
+          images: data.conteudo.images || [],
+          music: data.conteudo.music || null
+        },
+        created_at: new Date().toISOString()
+      };
+
+      // Inserir no Supabase
+      const { data: response, error } = await window.supabase
+        .from('cards')
+        .insert([cardData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro no Supabase:', error);
+        throw this.handleSupabaseError(error);
+      }
+
+      return {
+        ...response,
+        url,
+        redirectUrl: `/c/${id}-${sanitizedPageName}`
+      };
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
+      throw error;
+    }
+  }
+
+  static handleSupabaseError(error) {
+    switch (error.code) {
+      case '23505':
+        return new Error('Já existe um cartão com este nome. Escolha outro.');
+      case '413':
+        return new Error('Dados muito grandes. Reduza o tamanho das imagens.');
+      case '42501':
+        return new Error('Permissão negada. Entre em contato com o suporte.');
+      default:
+        return new Error(`Erro no servidor: ${error.message}`);
+    }
+  }
+
+  static async init() {
+    console.log('[App] Iniciando aplicação...');
+
+    // Verificar elementos essenciais
+    if (!this.checkRequiredElements()) {
+      NavigationManager.showAlert('Erro ao carregar formulário. Recarregue a página.');
+      return;
+    }
+
+    try {
+      // Inicializar Supabase
+      const supabaseReady = await initializeSupabase();
+      if (!supabaseReady) {
+        NavigationManager.showAlert('Algumas funcionalidades estarão limitadas devido a problemas de conexão.');
+      }
+
+      // Configurar eventos
+      this.setupEventListeners();
+
+      // Inicializar componentes
+      ImageHandler.initImageSlider();
+      StateManager.loadDraft();
+      this.setupMessageCounter();
+      this.initBackgroundPreviews();
+      this.setupPlanSelection();
+
+      console.log('[App] Inicialização concluída');
+    } catch (error) {
+      console.error('[App] Erro na inicialização:', error);
+      NavigationManager.showAlert('Erro ao iniciar. Recarregue a página.');
+    }
+  }
+
+  static checkRequiredElements() {
+    const requiredElements = [
+      DOM.FORM, DOM.NEXT_BUTTON, DOM.PREV_BUTTON,
+      DOM.PAGE_NAME_INPUT, DOM.PAGE_TITLE_INPUT,
+      DOM.MESSAGE_TEXTAREA, DOM.PREVIEW_CONTENT
+    ];
+
+    const missingElements = requiredElements.filter(el => !el);
+    if (missingElements.length) {
+      console.error('Elementos ausentes:', missingElements);
+      return false;
+    }
+
+    return true;
   }
 
   static setupEventListeners() {
-    // Eventos globais
-    document.addEventListener('click', this.handleDocumentClick.bind(this));
-    document.addEventListener('keydown', this.handleKeyNavigation.bind(this));
+    // Navegação
+    DOM.NEXT_BUTTON.addEventListener('click', (e) => {
+      e.preventDefault();
+      NavigationManager.goToNextStep();
+    });
+
+    DOM.PREV_BUTTON.addEventListener('click', (e) => {
+      e.preventDefault();
+      NavigationManager.goToPrevStep();
+    });
 
     // Upload de imagens
     this.setupUploadListeners();
@@ -843,12 +940,19 @@ class App {
     // Inputs com debounce
     this.setupDebouncedInputs();
 
-    // Beforeunload
+    // Eventos globais
     window.addEventListener('beforeunload', this.handleBeforeUnload.bind(this));
+    document.addEventListener('keydown', this.handleKeyNavigation.bind(this));
+
+    // Remoção de thumbnails
+    DOM.THUMBNAILS_CONTAINER.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('.thumbnail-remove');
+      if (removeBtn) this.removeThumbnail(removeBtn);
+    });
   }
 
   static setupUploadListeners() {
-    DOM.UPLOAD_AREA.addEventListener('click', (e) => {
+    DOM.UPLOAD_AREA.addEventListener('click', () => {
       if (!STATE.isUploading) DOM.FILE_INPUT.click();
     });
 
@@ -859,35 +963,60 @@ class App {
       }
     });
 
-    // Drag and drop
     DOM.UPLOAD_AREA.addEventListener('dragenter', this.handleDragEnter.bind(this));
     DOM.UPLOAD_AREA.addEventListener('dragover', this.handleDragOver.bind(this));
     DOM.UPLOAD_AREA.addEventListener('dragleave', this.handleDragLeave.bind(this));
     DOM.UPLOAD_AREA.addEventListener('drop', this.handleFileDrop.bind(this));
-
     DOM.FILE_INPUT.addEventListener('change', this.handleFileUpload.bind(this));
   }
 
   static setupDebouncedInputs() {
-    const inputs = {
-      PAGE_NAME_INPUT: { handler: this.handlePageNameInput.bind(this), delay: 300 },
-      PAGE_TITLE_INPUT: { handler: this.handlePageTitleInput.bind(this), delay: 300 },
-      MESSAGE_TEXTAREA: { handler: this.handleMessageInput.bind(this), delay: 100 },
-      MUSIC_LINK_INPUT: { handler: this.handleMusicLinkInput.bind(this), delay: 500 },
-      EMAIL_INPUT: { handler: this.handleEmailInput.bind(this), delay: 300 }
+    const debounce = (func, wait, immediate = false) => {
+      let timeout;
+      return function () {
+        const context = this, args = arguments;
+        const later = function () {
+          timeout = null;
+          if (!immediate) func.apply(context, args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (immediate && !timeout) func.apply(context, args);
+      };
     };
 
-    Object.entries(inputs).forEach(([id, { handler, delay }]) => {
-      DOM[id].addEventListener('input', this.debounce(handler, delay));
-    });
-  }
-
-  static setupEmailInput() {
-    DOM.EMAIL_INPUT.addEventListener('input', this.debounce(e => {
-      STATE.formData.userEmail = e.target.value;
+    // Page Name
+    DOM.PAGE_NAME_INPUT.addEventListener('input', debounce(e => {
+      STATE.formData.conteudo.pageName = e.target.value;
+      StateManager.updateBrowserUrl();
       StateManager.saveDraft();
+    }, 300));
 
-      // Validação em tempo real
+    // Page Title
+    DOM.PAGE_TITLE_INPUT.addEventListener('input', debounce(e => {
+      STATE.formData.conteudo.title = e.target.value;
+      StateManager.updateTitlePreview();
+      StateManager.saveDraft();
+    }, 300));
+
+    // Message
+    DOM.MESSAGE_TEXTAREA.addEventListener('input', debounce(e => {
+      STATE.formData.conteudo.message = DOMPurify.sanitize(e.target.value);
+      StateManager.updateMessagePreview();
+      StateManager.saveDraft();
+    }, 100));
+
+    // Music Link
+    DOM.MUSIC_LINK_INPUT.addEventListener('input', debounce(e => {
+      STATE.formData.conteudo.music = e.target.value || null;
+      MusicPlayer.updatePreview();
+      StateManager.saveDraft();
+    }, 500));
+
+    // Email
+    DOM.EMAIL_INPUT.addEventListener('input', debounce(e => {
+      STATE.formData.email = e.target.value;
+      StateManager.saveDraft();
       const validation = FormValidator.validateEmail(e.target.value);
       DOM.EMAIL_ERROR.textContent = validation.valid ? '' : validation.message;
     }, 300));
@@ -895,7 +1024,7 @@ class App {
 
   static setupMessageCounter() {
     if (!DOM.CHAR_COUNTER) {
-      const counter = document.createElement('span');
+      const counter = document.createElement('div');
       counter.id = 'char-counter';
       counter.className = 'char-counter';
       counter.textContent = `${CONFIG.MAX_MESSAGE_LENGTH} caracteres restantes`;
@@ -904,72 +1033,31 @@ class App {
     }
   }
 
- // static registerServiceWorker() {
-  //  if ('serviceWorker' in navigator) {
-  //    navigator.serviceWorker.register('/sw.js')
-   //     .then(registration => {
-   //       console.log('ServiceWorker registrado:', registration.scope);
-   ///     })
-   //     .catch(error => {
-    //      console.log('Falha no registro do ServiceWorker:', error);
-   //     });
-   // }
-  //}
+  static initBackgroundPreviews() {
+    // Forçar renderização dos efeitos
+    document.querySelectorAll('.bg-preview.emoji-rain, .bg-preview.rain').forEach(preview => {
+      void preview.offsetWidth;
+    });
 
-  static handleDocumentClick(e) {
-    const target = e.target;
-
-    if (target.closest('.btn-next')) {
-      e.preventDefault();
-      NavigationManager.goToNextStep();
-      return;
-    }
-
-    if (target.closest('.btn-prev')) {
-      e.preventDefault();
-      NavigationManager.goToPrevStep();
-      return;
-    }
-
-    if (target.closest('.btn-select-plan')) {
-      e.preventDefault();
-      this.handlePlanSelection(target.closest('.btn-select-plan'));
-      return;
-    }
-
-    if (target.closest('.btn-submit')) {
-      e.preventDefault();
-      this.handleFormSubmission();
-      return;
-    }
-
-    const bgOption = target.closest('.background-option');
-    if (bgOption) {
-      e.preventDefault();
-      this.selectBackground(bgOption);
-      return;
-    }
-
-    const thumbRemove = target.closest('.thumbnail-remove');
-    if (thumbRemove) {
-      e.preventDefault();
-      this.removeThumbnail(thumbRemove);
-      return;
-    }
-
-    const openModal = document.querySelector('.modal.open');
-    if (openModal && !target.closest('.modal-content')) {
-      this.closeModal(openModal);
-    }
+    // Configurar eventos dos backgrounds
+    document.querySelectorAll('.background-option').forEach(option => {
+      option.addEventListener('click', () => this.selectBackground(option));
+      option.addEventListener('keydown', (e) => {
+        if (['Enter', ' '].includes(e.key)) {
+          e.preventDefault();
+          this.selectBackground(option);
+        }
+      });
+    });
   }
 
-  static handleKeyNavigation(e) {
-    if (e.key === 'ArrowRight') NavigationManager.goToNextStep();
-    if (e.key === 'ArrowLeft') NavigationManager.goToPrevStep();
-    if (e.key === 'Escape') {
-      const openModal = document.querySelector('.modal.open');
-      if (openModal) this.closeModal(openModal);
-    }
+  static setupPlanSelection() {
+    document.querySelectorAll('.btn-select-plan').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handlePlanSelection(button);
+      });
+    });
   }
 
   static async handleFileUpload(e) {
@@ -988,9 +1076,7 @@ class App {
       ImageHandler.updateThumbnails();
       ImageHandler.updateImageSlider();
       StateManager.saveDraft();
-
     } catch (error) {
-      console.error('Erro no upload:', error);
       NavigationManager.showAlert(error.message);
     } finally {
       STATE.isUploading = false;
@@ -1021,9 +1107,14 @@ class App {
   static handleBeforeUnload(e) {
     if (STATE.currentStep > 1) {
       e.preventDefault();
-      e.returnValue = '';
+      e.returnValue = 'Você tem alterações não salvas. Deseja realmente sair?';
       StateManager.saveDraft();
     }
+  }
+
+  static handleKeyNavigation(e) {
+    if (e.key === 'ArrowRight') NavigationManager.goToNextStep();
+    if (e.key === 'ArrowLeft') NavigationManager.goToPrevStep();
   }
 
   static selectBackground(option) {
@@ -1033,6 +1124,7 @@ class App {
 
     option.classList.add('selected');
     STATE.selectedBackground = option.dataset.bg;
+    STATE.formData.conteudo.background = option.dataset.bg;
     EffectManager.applyBackgroundEffect(STATE.selectedBackground, DOM.PREVIEW_CONTENT);
     StateManager.saveDraft();
   }
@@ -1054,9 +1146,11 @@ class App {
   static createConfirmationModal(message, onConfirm) {
     const modal = document.createElement('div');
     modal.className = 'modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
     modal.innerHTML = `
       <div class="modal-content">
-        <p>${message}</p>
+        <p>${DOMPurify.sanitize(message)}</p>
         <div class="modal-actions">
           <button type="button" class="btn-cancel">Cancelar</button>
           <button type="button" class="btn-confirm">Confirmar</button>
@@ -1064,137 +1158,63 @@ class App {
       </div>
     `;
 
-    modal.querySelector('.btn-confirm').addEventListener('click', () => {
+    // Foco no primeiro botão para acessibilidade
+    const confirmBtn = modal.querySelector('.btn-confirm');
+    const cancelBtn = modal.querySelector('.btn-cancel');
+
+    confirmBtn.addEventListener('click', () => {
       onConfirm();
       modal.remove();
     });
 
-    modal.querySelector('.btn-cancel').addEventListener('click', () => {
+    cancelBtn.addEventListener('click', () => {
       modal.remove();
     });
 
+    // Fechar ao pressionar ESC
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') modal.remove();
+    });
+
+    document.body.appendChild(modal);
+
+    // Animação de entrada
     setTimeout(() => modal.classList.add('open'), 10);
+
+    // Focar no botão de cancelar por padrão
+    cancelBtn.focus();
+
     return modal;
   }
 
   static handlePlanSelection(button) {
     const planCard = button.closest('.plan-card');
-    const planName = planCard.querySelector('h3').textContent;
-    STATE.formData.plan = planName;
-
-    // Submete o formulário
+    const planName = planCard.querySelector('h3').textContent.toLowerCase().replace(' ', '_');
+    STATE.formData.plano = planName === 'para_sempre' ? 'para_sempre' : 'anual';
     this.handleFormSubmission();
-  }
-
-  static async handleFormSubmission() {
-    try {
-      // Validação final
-      const emailValidation = FormValidator.validateEmail(STATE.formData.userEmail);
-      if (!emailValidation.valid) {
-        NavigationManager.showAlert(emailValidation.message);
-        DOM.EMAIL_INPUT.focus();
-        return;
-      }
-
-      // Mostrar loading
-      const submitBtn = document.querySelector('.btn-submit');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-
-      // Enviar dados ao backend
-      const response = await this.submitFormData(STATE.formData);
-
-      // Mostrar sucesso com a URL do cartão
-      NavigationManager.showAlert(
-        `Cartão criado com sucesso! Acesse em: ${response.url}`,
-        'success'
-      );
-
-      // Limpar estado após sucesso
-      StateManager.clearDraft();
-      setTimeout(() => {
-        window.location.href = '/obrigado.html'; // Página de confirmação
-      }, 3000);
-
-    } catch (error) {
-      console.error('Erro no envio:', error);
-      NavigationManager.showAlert(error.message || 'Erro ao criar cartão');
-      const submitBtn = document.querySelector('.btn-submit');
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = 'Enviar'; // Restaurar texto original
-    }
-  }
-
-  static async submitFormData(data) {
-    try {
-      const response = await fetch('http://localhost:3000/cards', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao enviar: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error('Erro ao enviar dados:', error);
-      throw error;
-    }
-  }
-
-  static handlePageNameInput(e) {
-    STATE.formData.pageName = e.target.value;
-    StateManager.updateBrowserUrl();
-    StateManager.saveDraft();
-  }
-
-  static handlePageTitleInput(e) {
-    STATE.formData.pageTitle = e.target.value;
-    StateManager.updateTitlePreview();
-    StateManager.saveDraft();
-  }
-
-  static handleMessageInput(e) {
-    STATE.formData.message = e.target.value;
-    StateManager.updateMessagePreview();
-    StateManager.saveDraft();
-  }
-
-  static handleMusicLinkInput(e) {
-    STATE.formData.musicLink = e.target.value;
-    MusicPlayer.updatePreview();
-    StateManager.saveDraft();
-  }
-
-  static handleEmailInput(e) {
-    STATE.formData.userEmail = e.target.value;
-    StateManager.saveDraft();
-  }
-
-  static closeModal(modal) {
-    modal.classList.remove('open');
-    setTimeout(() => modal.remove(), 300);
-  }
-
-  static debounce(func, wait, immediate = false) {
-    let timeout;
-    return function () {
-      const context = this, args = arguments;
-      const later = function () {
-        timeout = null;
-        if (!immediate) func.apply(context, args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-      if (immediate && !timeout) func.apply(context, args);
-    };
   }
 }
 
-// Inicialização da aplicação
-document.addEventListener('DOMContentLoaded', () => App.init());
+/**
+ * =============================================
+ * Inicialização da Aplicação
+ * =============================================
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  // Adicionar classe de carregamento ao body
+  document.body.classList.add('app-loading');
+
+  // Inicializar app quando tudo estiver pronto
+  const init = async () => {
+    try {
+      await App.init();
+    } catch (error) {
+      console.error('Falha crítica na inicialização:', error);
+      NavigationManager.showAlert('Falha ao carregar o aplicativo. Recarregue a página.');
+    } finally {
+      document.body.classList.remove('app-loading');
+    }
+  };
+
+  init();
+});
