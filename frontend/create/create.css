@@ -15,6 +15,12 @@
   --transition: 0.2s ease;
 }
 
+/* Adicionar valores de fallback */
+body {
+  background-color: var(--dark-1, #111);
+  color: var(--text, #f3f3f3);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -110,17 +116,23 @@ textarea:invalid {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-5px);
+  }
+  40%, 80% {
+    transform: translateX(5px);
+  }
 }
 
 .error-message {
-  display: none;
-  color: #ff4444;
-  font-size: 0.85rem;
-  margin-top: -1rem;
-  margin-bottom: 1rem;
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+  display: block;
+  min-height: 1.2rem; /* Reserva espaço para evitar deslocamento */
 }
 
 input:invalid + .error-message,
@@ -234,15 +246,22 @@ textarea:focus,
 }
 
 .form-step {
-  display: none;
-  position: relative;
-  opacity: 1;
-  transform: translateX(0);
-  transition: opacity var(--transition), transform var(--transition);
+  position: absolute;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-20px);
+  transition: all var(--transition) cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
 .form-step.active {
-  display: block;
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+  pointer-events: all;
+  transition-delay: 0.1s;
 }
 
 .form-step h2 {
@@ -791,12 +810,11 @@ input[type="email"]:valid {
 
 /* Container da preview - ESSENCIAL */
 .preview-wrapper {
-  height: 600px;
-  overflow-y: auto;
-  overflow-x: hidden;
   position: relative;
-  width: 100%;
+  height: 600px;
+  overflow: hidden !important; /* Forçar comportamento */
   contain: strict;
+  isolation: isolate; /* Criar novo contexto de empilhamento */
 }
 
 /* Título da Pré-visualização */
@@ -1023,48 +1041,44 @@ input[type="email"]:valid {
 /* Responsividade */
 /* ============================================= */
 @media (max-width: 768px) {
-  .preview-player {
-    padding: 1.25rem;
-  }
-  
-  .music-placeholder i {
-    font-size: 2rem;
-  }
-  
-  .music-preview iframe {
-    height: 70px;
+  .preview-pane {
+    margin-top: 2rem;
   }
 
-  .preview-qr {
-    margin-top: 1rem;
+  .preview-images {
+    height: 200px;
+  }
+
+  .form-pane {
+    padding: 1.5rem;
+  }
+
+  .form-step h2 {
+    font-size: 1.3rem;
   }
 }
 
 @media (max-width: 480px) {
-  .preview-player {
-    padding: 1rem;
-    border-radius: calc(var(--radius) / 1.5);
-  }
-  
-  .music-placeholder i {
-    font-size: 1.75rem;
-    margin-bottom: 0.75rem;
-  }
-  
-  .music-placeholder p {
-    font-size: 0.9rem;
-  }
-  
-  .music-preview iframe {
-    height: 60px;
+  .background-grid {
+    grid-template-columns: 1fr;
   }
 
-  .preview-qr {
-    padding: 0.75rem;
+  .preview-content {
+    min-height: 500px;
   }
 
-  .qr-placeholder i {
-    font-size: 2.5rem;
+  #preview-title {
+    font-size: 1.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-prev,
+  .btn-next {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -1455,19 +1469,5 @@ input[type="email"]:valid {
 
   .form-step h2 {
     font-size: 1.3rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .background-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .preview-content {
-    min-height: 500px;
-  }
-
-  #preview-title {
-    font-size: 1.5rem;
   }
 }
